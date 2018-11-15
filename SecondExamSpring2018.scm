@@ -62,7 +62,7 @@
 (newline)
 (define (mymap p seq)
   (if (null? seq) '()
-      (cons (p (car seq)) (mymap p (cdr seq)))))
+      (accumulate (lambda(x y) (cons (p x) y)) '() seq)))
 
 (define sample-list '(1 2 3 4 5))
 (map odd? sample-list)
@@ -91,7 +91,7 @@
         ((accumulate + 0 (mymap leave? t)))))
 (mymap leave? '(1 2 3 4 ( 4 5 6 ) (9 2 3 )5))
 
-(count-leaves sample-list)
+(count-leaves  '(1 2 3 4 ( 4 5 6 ) (9 2 3 )5))
 
 
 
@@ -118,9 +118,24 @@
 
 
 ;;;; INSERT YOUR ANSWER HERE
-
-
-
+(display "question 3a")
+(newline)
+(define (make-not a)
+  (list '~  a))
+(define (make-and a b)
+  (list a '^ b))
+(define (make-or a b)
+  (list a 'v b))
+(define (make-imply a b)
+  (list a '=> b))
+; gave up
+;(define (normalize e)
+;  (cond ((null? e) e)
+  ;      ((not (pair? (car e))) e)
+     ;   ((pair? (car e)) (cons (normalize (car e)) (normalize (cdr e))))
+    ; ;   ((and (not (pair? (cadr e))) (not (eq? (cadr e) '~))(not(null? (cddr e)))) (cons (normalize (car e)) (cons (cadr e) (normalize (caddr e)))))
+    ;    ((not (pair? (cadr e))) e)
+      ;  
 
 ; Problem 3b (10 points - Extra Credit)
 
@@ -134,9 +149,39 @@
 ; You do not need to give a proof.  You do need to show that your code works on some well-chosen test cases. 
 
 
+(define x (make-not 1))
+(define y (make-and 3 4))
+(define z (make-or 5 6))
+
+(define v (make-and x y))
+(display "question 3b")
+(newline)
+(define (remove-double-not e)
+  (cond ((null? e) e)
+        ((not (pair? e)) e)
+        ((null? (car e)) e)
+        ((pair? (car e)) (cons (remove-double-not (car e)) (remove-double-not (cdr e))))
+        ((and (not (pair? (cadr e))) (not (eq? (cadr e) '~))(not(null? (cddr e)))) (cons (remove-double-not (car e)) (cons (cadr e) (remove-double-not (caddr e)))))
+        ((not (pair? (cadr e))) e) ; case of (~ 1)
+        ((eq? (car e) '~) (if (eq? (caadr e) '~) (remove-double-not (cadadr e)) (cons (car e)(remove-double-not (cdr e)))))
+        (else (cons (car e)(remove-double-not (cdr e))))))
+
+(define no (make-not x))
+(define no2 (make-not no))
+(define no3 (make-not(make-not (make-not(make-not no2)))))
+(define sample (make-not '(~ (~ ((~ x) v (~ y))))))
+(define sample2 '(~ (~ (~ ((~ x) v (~ (~ (~ y))))))))
+no3
+(remove-double-not no3)
+sample
+(remove-double-not sample)
+sample2
+(remove-double-not sample2)
 
 
-
+(define sample3 (make-and sample2 sample2))
+sample3
+(remove-double-not sample3)
 ; Problem 4a.  (10 points) Write and prove correct a pair of MUTUALLY RECURSIVE programs odd-indexed-elements and
 ; even-indexed-elements to produce from one list L the two lists consisting, respectively, of the elements of L with
 ; even index and the elements of L with odd index.  For example, (odd-indexed-elements '(a b c d e f g h)) = '(b d f h)
